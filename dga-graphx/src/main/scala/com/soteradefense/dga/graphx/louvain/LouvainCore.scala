@@ -92,6 +92,9 @@ class LouvainCore extends Logging with Serializable {
     val maxIter = 100000
     var stop = 0
     var updatedLastPhase = 0L
+
+    println(s"minProgress: $minProgress, progressCounter: $progressCounter")
+
     do {
       count += 1
       even = !even
@@ -143,13 +146,17 @@ class LouvainCore extends Logging with Serializable {
       // and the other half on odd cycles (to prevent deadlocks)
       // so we only want to look for progress on odd cycles (after all vertices have had a chance to move)
       if (even) updated = 0
-      updated = updated + louvainGraph.vertices.filter(_._2.changed).count
+
+      val changed = louvainGraph.vertices.filter(_._2.changed).count
+      println(s"Changed: $changed")
+      updated = updated + changed
       
       if (!even) {
         println("  # vertices moved: " + java.text.NumberFormat.getInstance().format(updated))
         if (updated >= updatedLastPhase - minProgress) stop += 1
         updatedLastPhase = updated
       }
+      println(s"stop: $stop, even: $even, updated: $updated, count: $count")
     } while (stop <= progressCounter && (even || (updated > 0 && count < maxIter)))
     println("\nCompleted in " + count + " cycles")
 
@@ -222,7 +229,7 @@ class LouvainCore extends Logging with Serializable {
       var bestSigmaTot = 0L
       communityMessages.foreach({ case ((communityId, (communityName, sigmaTotal)), communityEdgeWeight) =>
         val deltaQ = q(startingCommunityId, communityId, sigmaTotal, communityEdgeWeight, louvainData.nodeWeight, louvainData.internalWeight, totalEdgeWeight.value)
-        //println("   communtiy: "+communityId+" sigma:"+sigmaTotal+" edgeweight:"+communityEdgeWeight+"  q:"+deltaQ)
+        println("   communtiy: "+communityId+" sigma:"+sigmaTotal+" edgeweight:"+communityEdgeWeight+"  q:"+deltaQ)
         if (deltaQ > maxDeltaQ || (deltaQ > 0 && (deltaQ == maxDeltaQ && communityId > bestCommunity))) {
           maxDeltaQ = deltaQ
           bestCommunity = communityId
@@ -232,7 +239,7 @@ class LouvainCore extends Logging with Serializable {
       })
       // only allow changes from low to high communities on even cycles and high to low on odd cycles
       if (louvainData.community != bestCommunity && ((even && louvainData.community > bestCommunity) || (!even && louvainData.community < bestCommunity))) {
-        //println("  "+vid+" SWITCHED from "+vdata.community+" to "+bestCommunity)
+        println("  "+vid+" SWITCHED from "+louvainData.community+" to "+bestCommunity)
         louvainData.community = bestCommunity
         louvainData.communityName = bestCommunityName
         louvainData.communitySigmaTot = bestSigmaTot

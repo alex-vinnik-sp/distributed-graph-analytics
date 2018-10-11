@@ -1,1 +1,3 @@
-include ':dga-core', ':dga-giraph', ':dga-graphx'
+include ':dga-core'
+include ':dga-giraph'
+include ':dga-graphx'

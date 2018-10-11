@@ -26,7 +26,8 @@ sourceSets {
 }
 
 dependencies {
-    compile project(':dga-core')
+    //compile project(':dga-core')
+    compile group: 'com.soteradefense', name: 'dga-core', version: '0.0.1'
     compile group: 'org.apache.spark', name: 'spark-core_2.11', version: '1.5.2'
     compile group: 'org.apache.spark', name: 'spark-graphx_2.11', version: '1.5.2'
     compile group: 'com.github.scopt', name: 'scopt_2.11', version: '3.2.0'

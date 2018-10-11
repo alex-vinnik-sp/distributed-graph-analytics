@@ -60,7 +60,8 @@ abstract class AbstractLouvainRunner(var minimumCompressionProgress: Int, var pr
       // halt immediately if the community labeling took less than 3 passes
       //println(s"if ($passes > 2 && $currentQ > $q + 0.001 )")
       //if (numberOfPasses > 2 && currentQModularityValue > q_modularityValue + 0.001) {
-      if (currentQModularityValue > q_modularityValue + 0.001) {
+      //if (compressionLevel < 4) {
+      if (currentQModularityValue > q_modularityValue) {
         saveLevel(sc, compressionLevel, currentQModularityValue, louvainGraph)
         q_modularityValue = currentQModularityValue
         louvainGraph = louvainCore.compressGraph(louvainGraph)
