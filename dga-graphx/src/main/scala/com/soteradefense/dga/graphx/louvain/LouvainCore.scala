@@ -147,16 +147,15 @@ class LouvainCore extends Logging with Serializable {
       // so we only want to look for progress on odd cycles (after all vertices have had a chance to move)
       if (even) updated = 0
 
-      val changed = louvainGraph.vertices.filter(_._2.changed).count
+      val changed = labeledVertices.filter(_._2.changed).count
       println(s"Changed: $changed")
       updated = updated + changed
       
       if (!even) {
-        println("  # vertices moved: " + java.text.NumberFormat.getInstance().format(updated))
-        if (updated >= updatedLastPhase - minProgress) stop += 1
-        updatedLastPhase = updated
+        println(s"# vertices moved: $updated, updatedLastPhase: $updatedLastPhase, minProgress: $minProgress")
+        if (updated >= minProgress) stop += 1
       }
-      println(s"stop: $stop, even: $even, updated: $updated, count: $count")
+      println(s"stop: $stop, even: $even, updated: $updated, count: $count, activeMessages: $activeMessages")
     } while (stop <= progressCounter && (even || (updated > 0 && count < maxIter)))
     println("\nCompleted in " + count + " cycles")
 

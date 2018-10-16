@@ -51,17 +51,25 @@ abstract class AbstractLouvainRunner(var minimumCompressionProgress: Int, var pr
       compressionLevel += 1
       println(s"\nStarting Louvain level $compressionLevel")
 
+      val previousNumberOfClusters = louvainGraph.vertices.count()
+
       // label each vertex with its best community choice at this level of compression
       val (currentQModularityValue, currentGraph, numberOfPasses) = louvainCore.louvain(sc, louvainGraph, minimumCompressionProgress, progressCounter)
       louvainGraph.unpersistVertices(blocking = false)
       louvainGraph = currentGraph
-      
+
+      // number of clusters after modularity optimization
+      val obtainedClusters = currentGraph.vertices.map(v => v._2.community).distinct().count()
+      println(s"obtainedClusters: $obtainedClusters, modularity: $currentQModularityValue, previousNumberOfClusters: $previousNumberOfClusters, q_modularityValue: $q_modularityValue")
+
       // If modularity was increased by at least 0.001 compress the graph and repeat
       // halt immediately if the community labeling took less than 3 passes
       //println(s"if ($passes > 2 && $currentQ > $q + 0.001 )")
       //if (numberOfPasses > 2 && currentQModularityValue > q_modularityValue + 0.001) {
       //if (compressionLevel < 4) {
-      if (currentQModularityValue > q_modularityValue) {
+      if ((currentQModularityValue >= q_modularityValue
+          || (currentQModularityValue < q_modularityValue && q_modularityValue - currentQModularityValue < 0.02))
+          &&  (previousNumberOfClusters - obtainedClusters)/previousNumberOfClusters.toDouble > 0.05) {
         saveLevel(sc, compressionLevel, currentQModularityValue, louvainGraph)
         q_modularityValue = currentQModularityValue
         louvainGraph = louvainCore.compressGraph(louvainGraph)
